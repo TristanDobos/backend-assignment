@@ -1,0 +1,218 @@
+openapi: 3.0.0
+info:
+  title: Form Configuration API
+  version: 1.0.0
+servers:
+  - url: 'https://api.example.com/v1'
+paths:
+  /forms:
+    get:
+      summary: Retrieve all form fields
+      operationId: getForm
+      responses:
+        '200':
+          description: Successfully retrieved all forms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Field'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /form:
+    post:
+      summary: Create a form item
+      operationId: createFormItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldDetails'
+      responses:
+        '201':
+          description: Successfully created a form item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Field'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /form/{fieldId}:
+    delete:
+      summary: Delete a form item
+      operationId: deleteFormItem
+      parameters:
+      - name: fieldId
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Successfully deleted form item
+        '404':
+          description: Form item not found
+        '500':
+          description: Server error
+
+  /form/order:
+    patch:
+      summary: Change order of form items
+      operationId: changeFormItemOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+      responses:
+        '200':
+          description: Successfully updated form order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Field'
+        '500':
+          description: Server error
+  /report:
+    post:
+      summary: Submit a report with user responses
+      operationId: submitReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportSubmission'
+      responses:
+        '201':
+          description: Successfully submitted report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '400':
+          description: Invalid report data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /report/{submissionId}:
+    get:
+      summary: Retrieves detailed information about a specific report
+      operationId: getReportDetail
+      parameters:
+      - name: submissionId
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Successfully retrieved report details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '404':
+          description: Report not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+components:
+  schemas:
+    FieldResponse:
+      type: object
+      properties:
+        fieldId:
+          type: integer
+        value:
+          type: string
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: integer
+          format: int32
+    Field:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        type:
+          type: string
+          enum: [textual, select]
+        min_length:
+          type: integer
+          nullable: true
+        max_length:
+          type: integer
+          nullable: true
+        options:
+          type: array
+          items:
+            type: string
+          nullable: true
+    FieldDetails:
+      allOf:
+        - $ref: '#/components/schemas/Field'
+    ReportSubmission:
+      type: object
+      properties:
+        responses:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldResponse'
+    Report:
+      type: object
+      properties:
+        submissionId:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        responses:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldResponse'
